@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xauzuki Jurnal</title>
+
+<style>
+:root{
+  --bg:#0f172a;
+  --card:#111827;
+  --border:#1f2937;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --green:#22c55e;
+  --blue:#3b82f6;
+  --red:#ef4444;
+  --gray:#374151;
+  --darkcyan:#0f766e;
+
+  --profit-width:110px;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  padding:1rem;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Segoe UI,Tahoma,sans-serif;
+  font-size:13px;
+}
+
+.container{max-width:1400px;margin:auto}
+
+/* HEADER */
+.header{text-align:center;margin-bottom:.5rem}
+.header h1{margin:0;font-size:1.3rem}
+
+/* EQUITY */
+.equity-box{
+  text-align:center;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:.6rem;
+  margin-bottom:.6rem;
+}
+.label{font-size:.65rem;color:var(--muted)}
+.value{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  font-weight:700;
+  line-height:1.1;
+}
+.value.main{font-size:1.2rem}
+.sub{margin-top:.15rem;font-size:.65rem;color:var(--muted)}
+
+/* SUMMARY */
+.summary{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:.6rem;
+  margin-bottom:.6rem;
+}
+.summary-row{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:.35rem;
+}
+.summary-item{flex:1;text-align:center}
+.green{color:var(--green)}
+
+/* CONTROLS */
+.controls{
+  display:flex;
+  gap:.4rem;
+  justify-content:center;
+  margin-bottom:.6rem;
+  flex-wrap:wrap;
+}
+select,input{
+  background:var(--card);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:.35rem .5rem;
+  font-size:.75rem;
+}
+button{
+  border:none;
+  border-radius:6px;
+  padding:.35rem .6rem;
+  font-size:.7rem;
+  font-weight:600;
+  cursor:pointer;
+}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-red{background:var(--red);color:#fff}
+.btn-gray{background:var(--gray);color:#fff}
+
+/* JOURNAL */
+.journal-header{
+  font-size:.7rem;
+  color:var(--muted);
+  font-weight:600;
+}
+.trade-row{
+  display:grid;
+  grid-template-columns:1.2fr auto 1.3fr; /* AKSI KE KANAN */
+  gap:.6rem;
+  align-items:center;
+  padding:.25rem 0;
+}
+.day-block{
+  border-bottom:1px solid var(--border);
+  padding-bottom:.6rem;
+  margin-bottom:.6rem;
+}
+.date-big{font-size:1.1rem;font-weight:700}
+.date-small{font-size:.65rem;color:var(--muted)}
+
+.profit-input{width:var(--profit-width)}
+
+.action-cell{
+  display:flex;
+  gap:.3rem;
+  justify-content:center;
+  text-align:center;
+}
+.add-btn{
+  background:var(--darkcyan);
+  color:#fff;
+  border-radius:50%;
+  width:26px;
+  height:26px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.1rem;
+}
+
+/* WITHDRAW MODAL */
+#wd-modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  z-index:99;
+  align-items:center;
+  justify-content:center;
+}
+#wd-box{
+  background:#111827;
+  border:1px solid #1f2937;
+  border-radius:10px;
+  padding:1rem;
+  width:260px;
+}
+
+.line-divider-select {
+            width: 100%;
+            height: 30px;
+            background-color: #41b1f6;
+            border: none;
+            /* Menghapus border default */
+            padding: 0;
+            margin: 0;
+            /* Menghapus tampilan panah dropdown default di semua browser */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+.footer{
+  margin-top:1.2rem;
+  padding:.6rem 0;
+  text-align:center;
+  font-size:.65rem;
+  color:var(--muted);
+  border-top:1px solid var(--border);
+}
+
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="header">
+  <h1>Jurnal Trading Xauzuki</h1>
+</div>
+
+<!-- EQUITY -->
+<div class="equity-box">
+  <div class="label">Equity</div>
+  <div id="equity" class="value main">
+    1 009.00 USc
+    <div class="sub">$10.09</div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div class="summary">
+  <div class="summary-row">
+    <div class="summary-item">
+      <div class="label">Deposit</div>
+      <div class="value">
+        1 009.00 USc
+        <div class="sub">$10.09</div>
+      </div>
+    </div>
+    <div class="summary-item">
+      <div class="label">Trades</div>
+      <div id="trades" class="value">0</div>
+    </div>
+    <div class="summary-item">
+      <div class="label">Withdraw</div>
+      <div id="withdraw" class="value">
+        0.00 USc
+        <div class="sub">$0.00</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-row">
+    <div class="summary-item">
+      <div class="label">Total Profit</div>
+      <div id="profit" class="value green">
+        0.00 USc
+        <div class="sub">$0.00</div>
+      </div>
+    </div>
+    <div class="summary-item">
+      <div class="label">Growth</div>
+      <div id="growth" class="value green">0.00%</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <select id="month"></select>
+  <input type="number" id="year">
+  <button class="btn-blue" onclick="openWD()">Withdraw</button>
+  <button class="btn-gray" onclick="exportData()">Export</button>
+  <button class="btn-red" onclick="resetAll()">Reset</button>
+  <button class="btn-gray" onclick="importFile.click()">Import</button>
+  <input type="file" id="importFile" hidden>
+<select class="line-divider-select" disabled></select>
+</div>
+
+<div class="journal-header trade-row">
+  <span>Tanggal / Hari</span>
+  <span>Profit (USc)</span>
+  <span style="text-align:center">Aksi</span>
+</div>
+
+<div id="journal"></div>
+
+</div>
+
+<!-- WITHDRAW MODAL -->
+<div id="wd-modal">
+  <div id="wd-box">
+    <div style="font-size:.8rem;color:#9ca3af;margin-bottom:.4rem">Withdraw (USc)</div>
+    <input id="wd-input" type="number" inputmode="decimal"
+      style="width:100%;padding:.4rem;border-radius:6px;border:1px solid #1f2937;background:#0f172a;color:#e5e7eb">
+    <div style="display:flex;gap:.4rem;justify-content:flex-end;margin-top:.6rem">
+      <button class="btn-gray" onclick="closeWD()">Batal</button>
+      <button class="btn-blue" onclick="submitWD()">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEPOSIT=1009;
+let withdrawTotal=0;
+const monthNames=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+
+function fmt(n){
+  return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g," ");
+}
+
+function updateSummary(){
+  let totalProfit=0,trades=0;
+
+  Object.keys(localStorage).forEach(k=>{
+    if(!k.startsWith("JurnalX-"))return;
+    JSON.parse(localStorage.getItem(k)||"[]").forEach(e=>{
+      if(e.profit!==""&&!isNaN(e.profit)){
+        totalProfit+=parseFloat(e.profit);
+        trades++;
+      }
+    });
+  });
+
+  const equity=DEPOSIT+totalProfit-withdrawTotal;
+
+  document.getElementById("trades").textContent=trades;
+
+  document.getElementById("withdraw").innerHTML=`
+    ${fmt(withdrawTotal)} USc
+    <div class="sub">$${fmt(withdrawTotal/100)}</div>
+  `;
+  document.getElementById("profit").innerHTML=`
+    ${fmt(totalProfit)} USc
+    <div class="sub">$${fmt(totalProfit/100)}</div>
+  `;
+  document.getElementById("equity").innerHTML=`
+    ${fmt(equity)} USc
+    <div class="sub">$${fmt(equity/100)}</div>
+  `;
+  document.getElementById("growth").textContent=
+    ((totalProfit/DEPOSIT)*100).toFixed(2)+"%";
+}
+
+function openWD(){
+  document.getElementById("wd-modal").style.display="flex";
+  const i=document.getElementById("wd-input");
+  i.value="";
+  i.focus();
+}
+function closeWD(){
+  document.getElementById("wd-modal").style.display="none";
+}
+function submitWD(){
+  const v=parseFloat(document.getElementById("wd-input").value);
+  if(!v||v<=0)return;
+  withdrawTotal+=v;
+  closeWD();
+  updateSummary();
+}
+
+function render(){
+  const cont=document.getElementById("journal");
+  cont.innerHTML="";
+  const m=month.value,y=year.value;
+  const days=new Date(y,m+1,0).getDate();
+
+  for(let d=1;d<=days;d++){
+    const key=`JurnalX-${y}-${m+1}-${d}`;
+    let entries=JSON.parse(localStorage.getItem(key)||"[]");
+    if(entries.length===0){
+      entries.push({id:Date.now()+""});
+      localStorage.setItem(key,JSON.stringify(entries));
+    }
+    const block=document.createElement("div");
+    block.className="day-block";
+
+    entries.forEach((e,i)=>{
+      const date=new Date(y,m,d);
+      const row=document.createElement("div");
+      row.className="trade-row";
+      row.innerHTML=`
+        ${i===0?`<div><div class="date-big">${d} ${monthNames[m]}</div><div class="date-small">${date.toLocaleString("id-ID",{weekday:"long"})}</div></div>`:`<div></div>`}
+        <input class="profit-input" type="number"
+          value="${e.profit||""}"
+          onkeydown="if(event.key==='Enter')this.blur()"
+          onchange="setProfit('${key}',${i},this.value)">
+        <div class="action-cell">
+          ${i===0?`<button class="add-btn" onclick="addRow('${key}')">+</button>`:""}
+          <button class="btn-gray" onclick="delRow('${key}',${i})">Hapus</button>
+        </div>
+      `;
+      block.appendChild(row);
+    });
+    cont.appendChild(block);
+  }
+  updateSummary();
+}
+
+function setProfit(k,i,v){
+  const d=JSON.parse(localStorage.getItem(k));
+  d[i].profit=v;
+  localStorage.setItem(k,JSON.stringify(d));
+  updateSummary();
+}
+function addRow(k){
+  const d=JSON.parse(localStorage.getItem(k));
+  d.push({id:Date.now()+""});
+  localStorage.setItem(k,JSON.stringify(d));
+  render();
+}
+function delRow(k,i){
+  const d=JSON.parse(localStorage.getItem(k));
+  d.splice(i,1);
+  d.length?localStorage.setItem(k,JSON.stringify(d)):localStorage.removeItem(k);
+  render();
+}
+function resetAll(){
+  if(!confirm("Hapus semua data?"))return;
+  Object.keys(localStorage).forEach(k=>{
+    if(k.startsWith("JurnalX-"))localStorage.removeItem(k);
+  });
+  withdrawTotal=0;
+  render();
+}
+function exportData(){
+  const data={withdraw:withdrawTotal};
+  Object.keys(localStorage).forEach(k=>{
+    if(k.startsWith("JurnalX-"))data[k]=JSON.parse(localStorage.getItem(k));
+  });
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)]));
+  a.download="xauzuki_backup.json";
+  a.click();
+}
+importFile.onchange=e=>{
+  const r=new FileReader();
+  r.onload=ev=>{
+    const data=JSON.parse(ev.target.result);
+    withdrawTotal=data.withdraw||0;
+    Object.keys(data).forEach(k=>{
+      if(k.startsWith("JurnalX-"))localStorage.setItem(k,JSON.stringify(data[k]));
+    });
+    render();
+  };
+  r.readAsText(e.target.files[0]);
+};
+
+monthNames.forEach((m,i)=>month.add(new Option(m,i)));
+const now=new Date();
+month.value=now.getMonth();
+year.value=now.getFullYear();
+month.onchange=render;
+year.onchange=render;
+render();
+</script>
+<footer class="footer">
+  Copyright © 2026 Xauzuki Journal • by rohmanaru_
+  <br>
+  All Rights Reserved
+</footer>
+
+
+</body>
+</html>
