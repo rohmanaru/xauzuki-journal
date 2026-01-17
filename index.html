@@ -243,7 +243,7 @@ button{
 <!-- CONTROLS -->
 <div class="controls">
   <select id="month"></select>
-  <input type="number" id="year">
+  <select id="year"></select>
   <button class="btn-blue" onclick="openWD()">Withdraw</button>
   <button class="btn-gray" onclick="exportData()">Export</button>
   <button class="btn-red" onclick="resetAll()">Reset</button>
@@ -422,12 +422,23 @@ importFile.onchange=e=>{
 };
 
 monthNames.forEach((m,i)=>month.add(new Option(m,i)));
-const now=new Date();
-month.value=now.getMonth();
-year.value=now.getFullYear();
-month.onchange=render;
-year.onchange=render;
+
+const now = new Date();
+const currentYear = now.getFullYear();
+
+/* isi dropdown tahun: 2000 s/d 5 tahun ke depan */
+for(let y = 2024; y <= currentYear + 74; y++){
+  year.add(new Option(y, y));
+}
+
+month.value = now.getMonth();
+year.value  = currentYear;
+
+month.onchange = render;
+year.onchange  = render;
+
 render();
+
 </script>
 <footer class="footer">
   Copyright © 2026 Xauzuki Journal • by rohmanaru_
