@@ -183,6 +183,21 @@ button{
   border-top:1px solid var(--border);
 }
 
+.control-row{
+  display:flex;
+  gap:.4rem;
+  justify-content:center;
+  margin-bottom:.3rem;
+  flex-wrap:wrap;
+}
+#month{
+  width:100px;   /* atur sesuai selera */
+}
+#year{
+  width:100px;   /* ← atur sesuai selera */
+}
+
+
 </style>
 </head>
 
@@ -242,16 +257,25 @@ button{
 
 <!-- CONTROLS -->
 <div class="controls">
-  <select id="month"></select>
-  <select id="year"></select>
-  <button class="btn-blue" onclick="openWD()">Withdraw</button>
-  <button class="btn-gray" onclick="exportData()">Export</button>
-  <button class="btn-red" onclick="resetAll()">Reset</button>
-  <button class="btn-gray" onclick="importFile.click()">Import</button>
-  <input type="file" id="importFile" hidden>
-<select class="line-divider-select" disabled></select>
+
+  <!-- BARIS 1 -->
+  <div class="control-row">
+    <select id="month"></select>
+    <select id="year"></select>
+    <button class="btn-blue" onclick="openWD()">Withdraw</button>
+  </div>
+
+  <!-- BARIS 2 -->
+  <div class="control-row">
+    <button class="btn-gray" onclick="exportData()">Export</button>
+    <button class="btn-red" onclick="resetAll()">Reset</button>
+    <button class="btn-gray" onclick="importFile.click()">Import</button>
+    <input type="file" id="importFile" hidden>
+  </div>
+
 </div>
 
+      <select class="line-divider-select" disabled></select>
 <div class="journal-header trade-row">
   <span>Tanggal / Hari</span>
   <span>Profit (USc)</span>
