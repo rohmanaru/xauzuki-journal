@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laporan Kinerja - Xauzuki</title>
+
+<style>
+:root{
+  --bg:#0f172a;
+  --card:#111827;
+  --border:#1f2937;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --green:#22c55e;
+  --gray:#9ca3af;
+  --blue:#3b82f6;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  padding:1rem;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Segoe UI,Tahoma,sans-serif;
+  font-size:13px;
+}
+
+.container{max-width:900px;margin:auto}
+
+/* HEADER */
+.header{
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+  margin-bottom:.6rem;
+}
+.back{
+  cursor:pointer;
+  color:var(--blue);
+  font-size:.8rem;
+}
+
+/* TABS */
+.tabs{
+  display:flex;
+  gap:.4rem;
+  margin-bottom:.6rem;
+}
+.tab{
+  flex:1;
+  text-align:center;
+  padding:.4rem;
+  border:1px solid var(--border);
+  border-radius:6px;
+  cursor:pointer;
+  color:var(--muted);
+}
+.tab.active{
+  background:var(--card);
+  color:var(--text);
+  border-color:var(--blue);
+}
+
+/* TABLE */
+.table{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:8px;
+  overflow:hidden;
+}
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr 1fr;
+  padding:.45rem .5rem;
+  border-bottom:1px solid var(--border);
+  font-size:.75rem;
+}
+.row.header{
+  color:var(--muted);
+  font-weight:600;
+}
+.row:last-child{border-bottom:none}
+
+.green{color:var(--green)}
+.gray{color:var(--gray)}
+
+.empty{
+  text-align:center;
+  padding:1rem;
+  color:var(--muted);
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="header">
+  <div class="back" onclick="back()">← Kembali</div>
+  <div style="font-weight:600">Laporan Kinerja</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="setMode('all')">Semua</div>
+  <div class="tab" onclick="setMode('profit')">Profit</div>
+  <div class="tab" onclick="setMode('withdraw')">Withdraw</div>
+</div>
+
+<!-- TABLE -->
+<div class="table">
+  <div class="row header">
+    <div>Hari</div>
+    <div>Tanggal</div>
+    <div>Jenis</div>
+    <div>USc</div>
+    <div>USD</div>
+  </div>
+  <div id="rows"></div>
+</div>
+
+</div>
+
+<script>
+let mode="all";
+
+function back(){
+  window.location.href="index.html";
+}
+
+function getEvents(){
+  return JSON.parse(localStorage.getItem("JurnalX-Events")||"[]");
+}
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  event.target.classList.add("active");
+  render();
+}
+
+function render(){
+  const cont=document.getElementById("rows");
+  cont.innerHTML="";
+  let events=getEvents();
+
+  if(mode!=="all"){
+    events=events.filter(e=>e.type===mode);
+  }
+
+  if(events.length===0){
+    cont.innerHTML=`<div class="empty">Belum ada data</div>`;
+    return;
+  }
+
+  events.forEach(e=>{
+    const isProfit=e.type==="profit";
+    cont.innerHTML+=`
+      <div class="row">
+        <div>${e.day}</div>
+        <div>${e.date}</div>
+        <div>${isProfit?"Profit":"Withdraw"}</div>
+        <div class="${isProfit?"green":"gray"}">
+          ${isProfit?"+":"-"}${e.usc.toFixed(2)}
+        </div>
+        <div class="${isProfit?"green":"gray"}">
+          ${isProfit?"+":"-"}$${(e.usc/100).toFixed(2)}
+        </div>
+      </div>
+    `;
+  });
+}
+
+render();
+</script>
+</body>
+</html>

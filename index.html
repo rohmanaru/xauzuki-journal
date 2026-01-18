@@ -262,7 +262,7 @@ button{
   <div class="control-row">
     <select id="month"></select>
     <select id="year"></select>
-    <button class="btn-blue" onclick="openWD()">Withdraw</button>
+    <button class="btn-blue" onclick="openReport()">Laporan</button>
   </div>
 
   <!-- BARIS 2 -->
@@ -303,6 +303,20 @@ button{
 const DEPOSIT=1009;
 let withdrawTotal=0;
 const monthNames=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+
+function getEvents(){
+  return JSON.parse(localStorage.getItem("JurnalX-Events") || "[]");
+}
+
+function saveEvents(events){
+  localStorage.setItem("JurnalX-Events", JSON.stringify(events));
+}
+
+function addEvent(date, day, type, usc){
+  const events = getEvents();
+  events.push({ date, day, type, usc });
+  saveEvents(events);
+}
 
 function fmt(n){
   return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g," ");
@@ -357,6 +371,35 @@ function submitWD(){
   closeWD();
   updateSummary();
 }
+let wdTargetKey = null;
+
+function openWDRow(key){
+  wdTargetKey = key;
+  document.getElementById("wd-modal").style.display="flex";
+  const i=document.getElementById("wd-input");
+  i.value="";
+  i.focus();
+}
+
+function submitWD(){
+  const v=parseFloat(document.getElementById("wd-input").value);
+  if(!v||v<=0)return;
+
+  // ambil tanggal dari key
+  const parts = wdTargetKey.split("-");
+  const dateObj = new Date(parts[1], parts[2]-1, parts[3]);
+  const date = dateObj.toISOString().split("T")[0];
+  const day  = dateObj.toLocaleString("id-ID",{weekday:"long"});
+
+  addEvent(date, day, "withdraw", v);
+
+  withdrawTotal += v; // tetap update summary lama
+  closeWD();
+  updateSummary();
+}
+function openReport(){
+  alert("Halaman laporan akan dibuka (next step)");
+}
 
 function render(){
   const cont=document.getElementById("journal");
@@ -386,8 +429,10 @@ function render(){
           onchange="setProfit('${key}',${i},this.value)">
         <div class="action-cell">
           ${i===0?`<button class="add-btn" onclick="addRow('${key}')">+</button>`:""}
+          <button class="btn-blue" onclick="openWDRow('${key}')">WD</button>
           <button class="btn-gray" onclick="delRow('${key}',${i})">Hapus</button>
         </div>
+
       `;
       block.appendChild(row);
     });
@@ -397,11 +442,21 @@ function render(){
 }
 
 function setProfit(k,i,v){
-  const d=JSON.parse(localStorage.getItem(k));
-  d[i].profit=v;
-  localStorage.setItem(k,JSON.stringify(d));
+  const d = JSON.parse(localStorage.getItem(k));
+  d[i].profit = v;
+  localStorage.setItem(k, JSON.stringify(d));
+
+  // === TAMBAH EVENT PROFIT ===
+  const parts = k.split("-");
+  const dateObj = new Date(parts[1], parts[2]-1, parts[3]);
+  const date = dateObj.toISOString().split("T")[0];
+  const day  = dateObj.toLocaleString("id-ID",{weekday:"long"});
+
+  addEvent(date, day, "profit", parseFloat(v));
+
   updateSummary();
 }
+
 function addRow(k){
   const d=JSON.parse(localStorage.getItem(k));
   d.push({id:Date.now()+""});
