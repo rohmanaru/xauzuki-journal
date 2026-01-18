@@ -371,12 +371,35 @@ function closeWD(){
   document.getElementById("wd-modal").style.display="none";
 }
 function submitWD(){
-  const v=parseFloat(document.getElementById("wd-input").value);
-  if(!v||v<=0)return;
+  const input = document.getElementById("wd-input");
+  const v = parseFloat(input.value);
 
+  if (!v || v <= 0) {
+    input.focus();
+    return;
+  }
+
+  // ambil tanggal hari ini
+  const now = new Date();
+  const date = now.toISOString().slice(0,10);
+  const day  = now.toLocaleString("id-ID", { weekday:"long" });
+
+  // simpan sebagai EVENT withdraw
+  addEvent(
+    date,
+    day,
+    "withdraw",
+    v,
+    Date.now().toString()
+  );
+
+  // TUTUP MODAL (WAJIB SETELAH EVENT)
   closeWD();
-  updateSummary();
+
+  // refresh UI
+  render();
 }
+
 function getTotalWithdraw(){
   return getEvents()
     .filter(e => e.type === "withdraw")
