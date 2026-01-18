@@ -405,34 +405,11 @@ function getTotalWithdraw(){
     .filter(e => e.type === "withdraw")
     .reduce((sum, e) => sum + e.usc, 0);
 }
-function submitWD(){
-  const input = document.getElementById("wd-input");
-  const v = parseFloat(input.value);
 
-  if (!v || v <= 0) {
-    input.focus();
-    return;
-  }
 
-  // ambil tanggal hari ini
-  const now = new Date();
-  const date = now.toISOString().slice(0,10);
-  const day  = now.toLocaleString("id-ID", { weekday:"long" });
 
-  // simpan withdraw sebagai EVENT
-  addEvent(
-    date,
-    day,
-    "withdraw",
-    v,
-    Date.now().toString()
-  );
-
-  // TUTUP MODAL (SEKARANG PASTI KEJALAN)
-  closeWD();
-
-  // render ulang (statistik + laporan)
-  render();
+function openReport(){
+  window.location.href = "laporan.html";
 }
 
 
