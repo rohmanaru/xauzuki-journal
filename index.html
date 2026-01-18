@@ -312,11 +312,12 @@ function saveEvents(events){
   localStorage.setItem("JurnalX-Events", JSON.stringify(events));
 }
 
-function addEvent(date, day, type, usc){
+function addEvent(date, day, type, usc, eventId){
   const events = getEvents();
-  events.push({ date, day, type, usc });
+  events.push({ date, day, type, usc, eventId });
   saveEvents(events);
 }
+
 
 function fmt(n){
   return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g," ");
@@ -391,6 +392,12 @@ function openWDRow(key){
   i.value="";
   i.focus();
 }
+function deleteEvent(eventId){
+  if(!eventId) return;
+  const events = getEvents().filter(e => e.eventId !== eventId);
+  saveEvents(events);
+}
+
 
 function submitWD(){
   const v=parseFloat(document.getElementById("wd-input").value);
@@ -463,7 +470,14 @@ function setProfit(k,i,v){
   const date = dateObj.toISOString().split("T")[0];
   const day  = dateObj.toLocaleString("id-ID",{weekday:"long"});
 
-  addEvent(date, day, "profit", parseFloat(v));
+ const eventId = Date.now().toString();
+
+addEvent(date, day, "profit", parseFloat(v), eventId);
+
+// simpan eventId ke jurnal harian
+d[i].eventId = eventId;
+localStorage.setItem(k, JSON.stringify(d));
+
 
   updateSummary();
 }
@@ -475,11 +489,22 @@ function addRow(k){
   render();
 }
 function delRow(k,i){
-  const d=JSON.parse(localStorage.getItem(k));
+  const d = JSON.parse(localStorage.getItem(k));
+
+  // HAPUS EVENT TERKAIT
+  deleteEvent(d[i].eventId);
+
   d.splice(i,1);
-  d.length?localStorage.setItem(k,JSON.stringify(d)):localStorage.removeItem(k);
+
+  if(d.length){
+    localStorage.setItem(k, JSON.stringify(d));
+  }else{
+    localStorage.removeItem(k);
+  }
+
   render();
 }
+
 function resetAll(){
   if(!confirm("Hapus semua data?"))return;
   Object.keys(localStorage).forEach(k=>{
