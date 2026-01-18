@@ -301,7 +301,7 @@ button{
 
 <script>
 const DEPOSIT=1009;
-let withdrawTotal=0;
+
 const monthNames=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 
 function getEvents(){
@@ -323,37 +323,42 @@ function fmt(n){
 }
 
 function updateSummary(){
-  let totalProfit=0,trades=0;
+  let totalProfit = 0;
+  let trades = 0;
 
-  Object.keys(localStorage).forEach(k=>{
-    if(!k.startsWith("JurnalX-"))return;
-    JSON.parse(localStorage.getItem(k)||"[]").forEach(e=>{
-      if(e.profit!==""&&!isNaN(e.profit)){
-        totalProfit+=parseFloat(e.profit);
-        trades++;
-      }
-    });
+  const events = getEvents();
+  const withdrawTotal = getTotalWithdraw();
+
+  events.forEach(e=>{
+    if(e.type === "profit"){
+      totalProfit += e.usc;
+      trades++;
+    }
   });
 
-  const equity=DEPOSIT+totalProfit-withdrawTotal;
+  const equity = DEPOSIT + totalProfit - withdrawTotal;
 
-  document.getElementById("trades").textContent=trades;
+  document.getElementById("trades").textContent = trades;
 
-  document.getElementById("withdraw").innerHTML=`
+  document.getElementById("withdraw").innerHTML = `
     ${fmt(withdrawTotal)} USc
     <div class="sub">$${fmt(withdrawTotal/100)}</div>
   `;
-  document.getElementById("profit").innerHTML=`
+
+  document.getElementById("profit").innerHTML = `
     ${fmt(totalProfit)} USc
     <div class="sub">$${fmt(totalProfit/100)}</div>
   `;
-  document.getElementById("equity").innerHTML=`
+
+  document.getElementById("equity").innerHTML = `
     ${fmt(equity)} USc
     <div class="sub">$${fmt(equity/100)}</div>
   `;
-  document.getElementById("growth").textContent=
-    ((totalProfit/DEPOSIT)*100).toFixed(2)+"%";
+
+  document.getElementById("growth").textContent =
+    ((totalProfit / DEPOSIT) * 100).toFixed(2) + "%";
 }
+
 
 function openWD(){
   document.getElementById("wd-modal").style.display="flex";
@@ -367,10 +372,16 @@ function closeWD(){
 function submitWD(){
   const v=parseFloat(document.getElementById("wd-input").value);
   if(!v||v<=0)return;
-  withdrawTotal+=v;
+
   closeWD();
   updateSummary();
 }
+function getTotalWithdraw(){
+  return getEvents()
+    .filter(e => e.type === "withdraw")
+    .reduce((sum, e) => sum + e.usc, 0);
+}
+
 let wdTargetKey = null;
 
 function openWDRow(key){
@@ -398,7 +409,7 @@ function submitWD(){
   updateSummary();
 }
 function openReport(){
-    window.location.href = "laporan.html";
+  window.location.href = "laporan.html";
 }
 
 function render(){
@@ -478,7 +489,7 @@ function resetAll(){
   render();
 }
 function exportData(){
-  const data={withdraw:withdrawTotal};
+    events: getEvents()
   Object.keys(localStorage).forEach(k=>{
     if(k.startsWith("JurnalX-"))data[k]=JSON.parse(localStorage.getItem(k));
   });
@@ -487,18 +498,31 @@ function exportData(){
   a.download="xauzuki_backup.json";
   a.click();
 }
-importFile.onchange=e=>{
-  const r=new FileReader();
-  r.onload=ev=>{
-    const data=JSON.parse(ev.target.result);
-    withdrawTotal=data.withdraw||0;
-    Object.keys(data).forEach(k=>{
-      if(k.startsWith("JurnalX-"))localStorage.setItem(k,JSON.stringify(data[k]));
+importFile.onchange = e => {
+  const r = new FileReader();
+  r.onload = ev => {
+    const data = JSON.parse(ev.target.result);
+
+    // === IMPORT EVENTS (PROFIT & WD) ===
+    if (data.events) {
+      localStorage.setItem(
+        "JurnalX-Events",
+        JSON.stringify(data.events)
+      );
+    }
+
+    // === IMPORT DATA JURNAL HARIAN (JurnalX-YYYY-M-D) ===
+    Object.keys(data).forEach(k => {
+      if (k.startsWith("JurnalX-") && k !== "JurnalX-Events") {
+        localStorage.setItem(k, JSON.stringify(data[k]));
+      }
     });
+
     render();
   };
   r.readAsText(e.target.files[0]);
 };
+
 
 monthNames.forEach((m,i)=>month.add(new Option(m,i)));
 
@@ -528,4 +552,3 @@ render();
 
 </body>
 </html>
-

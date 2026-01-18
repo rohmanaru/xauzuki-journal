@@ -73,7 +73,12 @@ body{
 }
 .row{
   display:grid;
-  grid-template-columns:1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns:    
+    0.6fr   /* Hari (lebih kecil) */
+    1.1fr   /* Tanggal */
+    1fr   /* Jenis */
+    1.3fr   /* USc (lebih lebar) */
+    0.8fr;  /* USD (lebih kecil) */
   padding:.45rem .5rem;
   border-bottom:1px solid var(--border);
   font-size:.75rem;
@@ -92,6 +97,51 @@ body{
   padding:1rem;
   color:var(--muted);
 }
+.report-title{
+  text-align:center;
+  font-size:1rem;
+  font-weight:600;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:.6rem;
+  margin-bottom:.6rem;
+}
+.row.header{
+  background:#0b1220;
+  color:var(--muted);
+  font-weight:600;
+}
+.filters{
+  display:flex;
+  gap:.4rem;
+  justify-content:center;
+  margin-bottom:.6rem;
+}
+
+.filters button{
+  background:var(--card);
+  border:1px solid var(--border);
+  color:var(--muted);
+  padding:.3rem .6rem;
+  border-radius:6px;
+  font-size:.7rem;
+  cursor:pointer;
+}
+
+.filters button.active{
+  border-color:var(--blue);
+  color:var(--text);
+}
+.chart-box{
+  margin-top:1rem;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:.6rem;
+}
+
+
 </style>
 </head>
 
@@ -100,14 +150,32 @@ body{
 
 <div class="header">
   <div class="back" onclick="back()">← Kembali</div>
-  <div style="font-weight:600">Laporan Kinerja</div>
 </div>
+
+<div class="report-title">
+  Laporan Kinerja
+</div>
+
 
 <!-- TABS -->
 <div class="tabs">
   <div class="tab active" onclick="setMode('all')">Semua</div>
   <div class="tab" onclick="setMode('profit')">Profit</div>
   <div class="tab" onclick="setMode('withdraw')">Withdraw</div>
+</div>
+
+<div class="filters">
+  <button class="active" onclick="setAll()">All Time</button>
+  <button onclick="setRange(7)">7 Hari</button>
+  <button onclick="setRange(30)">1 Bulan</button>
+  <button onclick="setRange(90)">3 Bulan</button>
+  <button onclick="openCustom()">Custom</button>
+</div>
+
+<div id="custom-range" style="display:none;margin-bottom:.6rem;text-align:center">
+  <input type="date" id="from">
+  <input type="date" id="to">
+  <button onclick="applyCustom()">Terapkan</button>
 </div>
 
 <!-- TABLE -->
@@ -122,10 +190,20 @@ body{
   <div id="rows"></div>
 </div>
 
+<div class="chart-box">
+  <canvas id="chart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </div>
 
 <script>
 let mode="all";
+let rangeDays = null;     // 7, 30, 90
+let customFrom = null;   // yyyy-mm-dd
+let customTo = null;     // yyyy-mm-dd
+let chartInstance = null;
 
 function back(){
   window.location.href="index.html";
@@ -133,6 +211,110 @@ function back(){
 
 function getEvents(){
   return JSON.parse(localStorage.getItem("JurnalX-Events")||"[]");
+}
+
+function formatDate(d){
+  const [y,m,day] = d.split("-");
+  return `${day.padStart(2,"0")}-${m.padStart(2,"0")}-${y}`;
+}
+function clearFilterUI(btn){
+  document.querySelectorAll(".filters button")
+    .forEach(b=>b.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+}
+
+function setAll(){
+  rangeDays = null;
+  customFrom = customTo = null;
+  document.getElementById("custom-range").style.display = "none";
+  clearFilterUI(event.target);
+  render();
+}
+
+function setRange(days){
+  rangeDays = days;
+  customFrom = customTo = null;
+  document.getElementById("custom-range").style.display = "none";
+  clearFilterUI(event.target);
+  render();
+}
+
+function openCustom(){
+  rangeDays = null;
+  clearFilterUI(event.target);
+  document.getElementById("custom-range").style.display = "block";
+}
+
+function applyCustom(){
+  customFrom = document.getElementById("from").value;
+  customTo   = document.getElementById("to").value;
+  render();
+}
+
+function renderChart(events){
+  const ctx = document.getElementById("chart");
+  if(!ctx) return;
+
+  if(chartInstance){
+    chartInstance.destroy();
+  }
+
+  let labels = [];
+  let values = [];
+
+  let equity = 0;
+
+  events.forEach(e=>{
+    labels.push(formatDate(e.date));
+
+    if(mode === "withdraw"){
+      values.push(e.usc);
+    }
+    else if(mode === "profit"){
+      equity += (e.type === "profit" ? e.usc : 0);
+      values.push(equity);
+    }
+    else{
+      equity += (e.type === "profit" ? e.usc : -e.usc);
+      values.push(equity);
+    }
+  });
+
+  const color =
+    mode === "profit"   ? "#22c55e" :
+    mode === "withdraw" ? "#9ca3af" :
+                          "#3b82f6";
+
+  chartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        borderColor: color,
+        backgroundColor: "transparent",
+        tension: 0.35,
+        pointRadius: 3,
+        pointBackgroundColor: color
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#9ca3af" },
+          grid:  { color: "rgba(255,255,255,0.05)" }
+        },
+        y: {
+          ticks: { color: "#9ca3af" },
+          grid:  { color: "rgba(255,255,255,0.05)" }
+        }
+      }
+    }
+  });
 }
 
 function setMode(m){
@@ -146,6 +328,26 @@ function render(){
   const cont=document.getElementById("rows");
   cont.innerHTML="";
   let events=getEvents();
+  const now = new Date();
+
+events = events.filter(e => {
+  const d = new Date(e.date);
+
+  // FILTER RANGE (7 / 30 / 90)
+  if (rangeDays) {
+    const diff = (now - d) / (1000 * 60 * 60 * 24);
+    return diff <= rangeDays;
+  }
+
+  // FILTER CUSTOM
+  if (customFrom && customTo) {
+    return d >= new Date(customFrom) && d <= new Date(customTo);
+  }
+
+  // SEMUA
+  return true;
+});
+
 
   if(mode!=="all"){
     events=events.filter(e=>e.type===mode);
@@ -161,7 +363,7 @@ function render(){
     cont.innerHTML+=`
       <div class="row">
         <div>${e.day}</div>
-        <div>${e.date}</div>
+        <div>${formatDate(e.date)}</div>
         <div>${isProfit?"Profit":"Withdraw"}</div>
         <div class="${isProfit?"green":"gray"}">
           ${isProfit?"+":"-"}${e.usc.toFixed(2)}
@@ -172,9 +374,13 @@ function render(){
       </div>
     `;
   });
+  renderChart(events);
+
 }
 
+
 render();
+
 </script>
 </body>
 </html>
